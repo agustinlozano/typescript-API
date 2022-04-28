@@ -1,5 +1,6 @@
 import express from 'express'
 import * as diaryServices from '../services/diary'
+import toNewDiaryEntry from '../utils'
 
 const router = express.Router()
 
@@ -7,8 +8,28 @@ router.get('/', (_req, res) => {
   res.send(diaryServices.getEntriesWithoutSensitiveInfo())
 })
 
-router.post('/', (_req, res) => {
-  res.send('Saving a diary!')
+router.get('/:id', (req, res) => {
+  const diary = diaryServices.findById(+req.params.id)
+
+  return (diary != null)
+    ? res.send(diary)
+    : res.sendStatus(404)
+})
+
+router.post('/', (req, res) => {
+  try {
+    const newDiaryEntry = toNewDiaryEntry(req.body)
+
+    const addedDiaryEntry = diaryServices.addDiary(newDiaryEntry)
+
+    res.json(addedDiaryEntry)
+  } catch (err) {
+    let errorMessage = 'Failed to do something exceptional'
+    if (err instanceof Error) {
+      errorMessage = err.message
+    }
+    res.status(400).send(errorMessage)
+  }
 })
 
 export default router
